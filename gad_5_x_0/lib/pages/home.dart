@@ -24,9 +24,9 @@ class _HomePageState extends State<HomePage> {
 
   String playerTurn = 'x';
   bool isButtonVisible = false;
-  Color? boxColor;
-  Color colorPlayerOne = Colors.blue;
-  Color colorPlayerTwo = Colors.red;
+  bool isGameOver = false;
+  int scorePlayerOne = 0;
+  int scorePlayerTwo = 0;
 
   @override
   void initState() {
@@ -46,6 +46,7 @@ class _HomePageState extends State<HomePage> {
       _ticTacToe[i] = ' ';
     }
 
+    isGameOver = false;
     isButtonVisible = false;
     playerTurn = 'x';
   }
@@ -63,6 +64,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Color? getColorForContainer(int index) {
+    if (isGameOver) {
+      if (playerTurn == 'x' && _ticTacToe[index] == '0') {
+          return Colors.grey;
+      }
+
+      if (playerTurn == '0' && _ticTacToe[index] == 'x') {
+        return Colors.grey;
+      }
+    }
+
     if (_ticTacToe[index] == 'x') {
       return Colors.blue;
     }
@@ -101,11 +112,19 @@ class _HomePageState extends State<HomePage> {
     _ticTacToe[index] = playerTurn;
 
     if (checkWin(playerTurn)) {
-      print('player $playerTurn has won');
+      if (playerTurn == 'x') {
+        scorePlayerOne++;
+      } else {
+        scorePlayerTwo++;
+      }
+
+      isGameOver = true;
+      isButtonVisible = true;
       return;
     }
     if (checkDraw()) {
-      print('remiza');
+      isGameOver == true;
+      isButtonVisible = true;
       return;
     }
 
@@ -129,6 +148,16 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Text>[
+                Text('Player one score: $scorePlayerOne'),
+                Text('Player two score: $scorePlayerTwo'),
+              ],
+            ),
+          ),
           GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
@@ -143,17 +172,19 @@ class _HomePageState extends State<HomePage> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      _gameLogic(index);
+                      if (!isGameOver && _ticTacToe[index] == ' ') {
+                        _gameLogic(index);
+                      }
                     });
                   },
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black),
                       color: getColorForContainer(index),
                     ),
                     width: 40.0,
                     height: 40.0,
-                    child: Center(child: Text('$index')),
                   ),
                 ),
               );
@@ -161,15 +192,29 @@ class _HomePageState extends State<HomePage> {
           ),
           Visibility(
             visible: isButtonVisible,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _resetGame();
-                });
-              },
-              child: const Text('Play again!'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _resetGame();
+                    });
+                  },
+                  child: const Text('Play again!'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      scorePlayerOne = 0;
+                      scorePlayerTwo = 0;
+                    });
+                  },
+                  child: const Text('ResetScore'),
+                ),
+              ],
             ),
-          )
+          ),
         ],
       ),
     );
